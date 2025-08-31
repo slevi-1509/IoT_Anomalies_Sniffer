@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./backend
+    image: myapp/backend:1.0.0
+    container_name: fastapi-backend
+    network_mode: "host"    # 🔑 direct access to host’s network
+    volumes:
+      - ./backend/app:/app/app
+
+  frontend:
+    build: ./frontend
+    image: myapp/frontend:1.0.0 
+    container_name: react-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge

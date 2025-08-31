@@ -1,0 +1,48 @@
+services:
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"   # external
+      - "9093:9093"   # internal
+    environment:
+       # Cluster ID (must be a fixed UUID for KRaft)
+      - KAFKA_CFG_CLUSTER_ID=abcdefgh-1234-5678-abcd-1234567890ab
+      - KAFKA_CFG_BROKER_ID=1
+
+      # Node / process role
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+
+      # Controller quorum (needed for KRaft)
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9094
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+
+      # Listeners
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9093,EXTERNAL://:9092,CONTROLLER://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://172.18.0.2:9093,EXTERNAL://3.81.72.149:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
+
+      # Allow plaintext for dev
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+      # Storage directory (needed for metadata log in KRaft mode)
+      - KAFKA_CFG_LOG_DIRS=/bitnami/kafka/data
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+  python-app:
+    build: .
+    container_name: python-app
+    ports:
+      - "8002:8002"
+    environment:
+      - KAFKA_URL=172.18.0.2:9093
+      # - KAFKA_URL=localhost:9092
+    depends_on:
+      - kafka
+
+volumes:
+  kafka_data:
+    driver: local

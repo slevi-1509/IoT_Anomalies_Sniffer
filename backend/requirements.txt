@@ -1,0 +1,7 @@
+uvicorn
+fastapi
+scapy
+python-nmap
+pydantic
+confluent-kafka
+requests
