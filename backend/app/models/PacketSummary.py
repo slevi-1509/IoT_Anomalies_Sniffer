@@ -19,7 +19,6 @@ class PackageSummary:
                 vendor: str = "None",
                 host_name: str = "None",
                 port_scan_result: str = "None",
-                iot_probability: str = "None",
         ):
         
         self.timestamp = timestamp
@@ -40,4 +39,3 @@ class PackageSummary:
         self.vendor = vendor
         self.host_name = host_name
         self.port_scan_result = port_scan_result
-        self.iot_probability = iot_probability

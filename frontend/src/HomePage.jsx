@@ -44,8 +44,8 @@ const HomePage = () => {
         await axios.get(`${SERVER_URL}/anomalies`).then(({ data: response }) => {
           if (typeof(response) == String)
             setAnomalies([]);
-          setAnomalies([...response]);
-          setAnomaliesToShow([...response]);
+          setAnomalies(response.map(logItem => JSON.parse(logItem.replace(/'/g, '"'))));
+          setAnomaliesToShow(response.map(logItem => JSON.parse(logItem.replace(/'/g, '"'))));
         }).catch((error) => {
           console.log("a" + error.message);
         });
@@ -95,16 +95,8 @@ const HomePage = () => {
 
   const handle_device_click = async (device) => {
     let device_anomalies = [];
-    let { src_mac, src_ip } = device;
-    for (let anomaly of anomalies) {
-      // console.log(anomaly.replace(/'/g, '"'));
-      let obj = JSON.parse(anomaly.replace(/'/g, '"'));
-      if (obj.src_mac === src_mac) {
-        device_anomalies.push(JSON.stringify(obj));
-      }
-    // console.log(device_anomalies);
-    setAnomaliesToShow([...device_anomalies]);
-    }
+    let { src_mac } = device;
+    setAnomaliesToShow(anomalies.filter(anomaly => anomaly.src_mac === src_mac));
   }
   
   const handleIotChange = (e) => {
@@ -129,6 +121,7 @@ const HomePage = () => {
           </Link>
       </Stack>
       <h1>My Python Sniffer Client</h1>
+      <br/>
       {interfaces && 
         <div>
           <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -140,7 +133,7 @@ const HomePage = () => {
               ))}
             </select>
           </section>
-
+          <br/>
           <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <h3>Options:</h3>
             <label htmlFor="interval">Set interval (seconds): </label>
@@ -153,8 +146,8 @@ const HomePage = () => {
             <input type="number" id="collect_data_time" name="collect_data_time" defaultValue='3600' min="600" onChange={handleSelect} />
             <label><input type="checkbox" name="ports_scan" checked={portsScan} onChange={handleChecked} /> Ports Scanning</label>
             <label><input type="checkbox" name="os_detect" checked={osDetect} onChange={handleChecked} /> Deep OS detection (slower)</label>
-            <div className="slidecontainer" style={{width: "10rem"}}>
-                <label htmlFor="iot-probability" style={{fontSize: '0.9rem'}}>Minimum IoT Probability: {iotProbability}</label>
+            <div className="slidecontainer" style={{width: "12rem"}}>
+                <label htmlFor="iot-probability" style={{fontSize: '0.9rem'}}>Minimum IoT Probability: <strong>{iotProbability}</strong></label>
                 <div id="iot-probability">
                   <Slider 
                       name="iot-probability"
@@ -175,7 +168,7 @@ const HomePage = () => {
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <h3>Devices:</h3>
             {devicesToShow.length > 0 ? (
-              <table style={{fontSize: '0.6rem', width: '100%', borderCollapse: 'collapse'}}>
+              <table style={{fontSize: '0.7rem', width: '95%', borderCollapse: 'collapse'}}>
                 <thead>
                   <tr>
                     <th>Mac</th>
@@ -183,7 +176,7 @@ const HomePage = () => {
                     <th>OS</th>
                     <th>Vendor</th>
                     <th>Hostname</th>
-                    <th>is IoT</th>
+                    <th>is_IoT</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -205,19 +198,46 @@ const HomePage = () => {
             <br/>
             <h3>Anomalies:</h3>
             <button type="button" onClick={()=>{setAnomaliesToShow(anomalies)}}>Show All</button>
-            <br />
+            <br/>
             { anomaliesToShow.length > 0 ? (
-              <div>
-                {anomaliesToShow.map((anomaly, index) => (
-                  <div key={index} style={{fontSize: '0.7rem', border: '1px solid red', width: '100%', maxWidth: '40rem'}}>
-                  <p>{anomaly}</p>
-                  </div>
-                ))}
+                <table style={{fontSize: '0.7rem', width: '95%', borderCollapse: 'collapse'}}>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>s-mac</th>
+                            <th>s-ip</th>
+                            <th>d-mac</th>
+                            <th>d-ip</th>
+                            <th>protocol</th>
+                            <th>dns_qry</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {anomaliesToShow.map((anomaly, index) => (
+                        <tr key={index} >
+                            <td>{anomaly.timestamp}</td>
+                            <td>{anomaly.src_mac}</td>
+                            <td>{anomaly.src_ip}</td>
+                            <td>{anomaly.dst_mac}</td>
+                            <td>{anomaly.dst_ip}</td>
+                            <td>{anomaly.protocol}</td>
+                            <td>{anomaly.dns_query}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            //   <div>
+            //     {anomaliesToShow.map((anomaly, index) => (
+            //       <div key={index} style={{fontSize: '12px', border: '1px solid red', width: '80%', maxWidth: '30rem'}}>
+            //       <p className="anomaly-text" style={{cursor: 'pointer'}} onClick={() => handleAnomalyClick(anomaly)}>{anomaly}</p>
+            //       </div>
+            //     ))}
 
-              </div>
+            //   </div>
             ) : (
               <p>No anomalies found.</p>
-            )}
+            )}  
+            <br/> 
           </div>
         </div>      }
     </>

@@ -10,6 +10,7 @@ const Devices = () => {
     const [deviceToShow, setDeviceToShow] = useState({});
     const [anomalies, setAnomalies] = useState([]);
     const [anomaliesToShow, setAnomaliesToShow] = useState([]);
+    const [log, setLog] = useState([]);
 
     useEffect (() => {
         const getInfo = async () => {
@@ -22,28 +23,30 @@ const Devices = () => {
             await axios.get(`${SERVER_URL}/anomalies`).then(({ data: response }) => {
             if (typeof(response) == String)
                 setAnomalies([]);
-            setAnomalies([...response]);
-            setAnomaliesToShow([...response]);
+            setAnomalies(response.map(logItem => JSON.parse(logItem.replace(/'/g, '"'))));
+            setAnomaliesToShow(response.map(logItem => JSON.parse(logItem.replace(/'/g, '"'))));
             }).catch((error) => {
-            console.log("a" + error.message);
+                console.log("a" + error.message);
             });
         }
         getInfo();
     }, [])
 
-    const handleSelect = (e) => {
+    const handleSelect = async (e) => {
         let { value } = e.target;
         setDeviceToShow(devices.find(device => device.src_mac === value) || {});
         if (value === "Show All Anomalies") {
             setAnomaliesToShow(anomalies);
         } else {
-            setAnomaliesToShow(anomalies.filter(anomaly => anomaly.includes(`"src_mac": "${value}"`)));
+            setAnomaliesToShow(anomalies.filter(anomaly => anomaly.src_mac === value));
         }
-    }
-
-    const handleAnomalyClick = (anomaly) => {
-        const anomalyObj = JSON.parse(anomaly);
-        setDeviceToShow(devices.find(device => device.src_mac === anomalyObj.src_mac) || {});
+        await axios.get(`${SERVER_URL}/log/${value.replace(/:/g, "")}`).then(({ data: response }) => {
+            if (typeof(response) == String)
+                setLog([]);
+            setLog(response.map(logItem => JSON.parse(logItem.replace(/'/g, '"'))));
+        }).catch((error) => {
+            console.log("a" + error.message);
+        });
     }
 
     return (
@@ -67,7 +70,7 @@ const Devices = () => {
             }  
             <br/>
             {deviceToShow && Object.keys(deviceToShow).length > 0 &&
-                <div style={{fontSize: '0.9rem', border: '3px solid darkgreen', width: '80%', maxWidth: '60rem'}}>
+                <div style={{fontSize: '0.9rem', border: '3px solid darkgreen', width: '90%', maxWidth: '60rem'}}>
                     <h3>Device Information</h3>
                     <p><strong>IP:</strong> {deviceToShow.src_ip}</p>
                     <p><strong>MAC:</strong> {deviceToShow.src_mac}</p> 
@@ -83,17 +86,75 @@ const Devices = () => {
             <br/>
             <h3>Anomalies:</h3>   
             { anomaliesToShow.length > 0 ? (
-              <div>
-                {anomaliesToShow.map((anomaly, index) => (
-                  <div key={index} style={{fontSize: '12px', border: '1px solid red', width: '80%', maxWidth: '30rem'}}>
-                  <p className="anomaly-text" style={{cursor: 'pointer'}} onClick={() => handleAnomalyClick(anomaly)}>{anomaly}</p>
-                  </div>
-                ))}
-
-              </div>
+                <table style={{fontSize: '0.7rem', width: '95%', borderCollapse: 'collapse'}}>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>s-mac</th>
+                            <th>s-ip</th>
+                            <th>d-mac</th>
+                            <th>d-ip</th>
+                            <th>protocol</th>
+                            <th>dns_qry</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {anomaliesToShow.map((anomaly, index) => (
+                        <tr key={index} >
+                            <td>{anomaly.timestamp}</td>
+                            <td>{anomaly.src_mac}</td>
+                            <td>{anomaly.src_ip}</td>
+                            <td>{anomaly.dst_mac}</td>
+                            <td>{anomaly.dst_ip}</td>
+                            <td>{anomaly.protocol}</td>
+                            <td>{anomaly.dns_query}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
             ) : (
               <p>No anomalies found.</p>
-            )}     
+            )}  
+            <br/> 
+            <h3>Log (Packets Summary):</h3>   
+            { log.length > 0 ? (
+                <table style={{fontSize: '0.7rem', width: '95%', borderCollapse: 'collapse'}}>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>s-mac</th>
+                            <th>s-ip</th>
+                            <th>d-mac</th>
+                            <th>d-ip</th>
+                            <th>protocol</th>
+                            <th>dns_qry</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {log.map((logItem, index) => (
+                        <tr key={index} >
+                            <td>{logItem.timestamp}</td>
+                            <td>{logItem.src_mac}</td>
+                            <td>{logItem.src_ip}</td>
+                            <td>{logItem.dst_mac}</td>
+                            <td>{logItem.dst_ip}</td>
+                            <td>{logItem.protocol}</td>
+                            <td>{logItem.dns_query}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            //   <div>
+            //     {log.map((logItem, index) => (
+            //       <div key={index} style={{fontSize: '12px', border: '1px solid blue', width: '80%'}}>
+            //       <p className="log-text">{logItem}</p>
+            //       </div>
+            //     ))}
+
+            //   </div>
+            ) : (
+              <p>No log found.</p>
+            )}       
         </div>
     );
 };

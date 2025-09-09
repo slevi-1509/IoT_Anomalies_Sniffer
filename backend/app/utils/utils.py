@@ -78,7 +78,6 @@ def handle_packet(packet, network, collect_data_time, iot_probability):
         with open(log_file_path, "a+") as log_file:
             log_file.seek(0) 
             for line in log_file:
-                # new_line = "{" + line.strip()[42:]
                 line_to_dict = ast.literal_eval(line.strip())
                 if [line_to_dict["dst_mac"], line_to_dict["dst_ip"], line_to_dict["dst_port"], line_to_dict["protocol"]] == [packet_summery.dst_mac, packet_summery.dst_ip, packet_summery.dst_port, packet_summery.protocol]:
                     packet_exists = True
@@ -144,10 +143,9 @@ def get_hostname_from_ip(ip):
     
 def scan_port(host):
     open_ports = ''
-    PORTS_TO_SCAN = [20,21,22,23,25,53,67,68,69,80,110,111,123,135,137,138,139,143,161,162,443,445,500,514,520,554,631,993,995,1434,1723,1900,3306,3389,4500,5900,8080,49152]
     print(f"Scanning ports on {host}...")
     try: 
-        for port in PORTS_TO_SCAN:
+        for port in config.PORTS_TO_SCAN:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(0.1)
             result = sock.connect_ex((host, port))

@@ -30,6 +30,15 @@ def getAnomalies(request: Request, response_model=list[str]):
                 anomalies.append(anomaly.strip())
     return anomalies
 
+@router.get("/log/{mac}")
+def getDeviceLog(request: Request, mac: str, response_model=list[str]):
+    device_log = []
+    if os.path.exists(config.LOGS_DIR + mac + ".log"):
+        with open(config.LOGS_DIR + mac + ".log", 'r') as file:
+            for log in file.readlines():
+                device_log.append(log.strip())
+    return device_log
+
 @router.post("/runsniffer")
 def startSniffer(params: SubmitFromUser, request: Request):
     found_working_interfaces = interfaces.get_working_ifaces()

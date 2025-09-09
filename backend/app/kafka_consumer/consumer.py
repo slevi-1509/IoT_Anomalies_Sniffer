@@ -62,10 +62,10 @@ def consume_messages():
             print(f"Consumer error: {msg.error()}")
             continue
         msg_dict = json.loads(msg.value().decode('utf-8'))
-        print(f"Received: {msg.key()} - {msg.value().decode('utf-8')}")
         with open(config.DEVICES_FILE, 'w') as file:
             json.dump(msg_dict, file, indent=4)
         update_devices_dict(msg_dict)
+        print("\nReceived response:")
         for device in msg_dict:
             print(f"Device: {device}, IP: {msg_dict[device]['src_ip']}, Is IoT: {msg_dict[device]['is_iot']}")
 

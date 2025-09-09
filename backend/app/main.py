@@ -31,7 +31,6 @@ def get_interfaces():
     return config.active_interfaces
 
 def get_registered_devices():
-
     if os.path.exists(config.DEVICES_FILE):
         try:
             with open(config.DEVICES_FILE, "r") as file:
@@ -47,7 +46,6 @@ def main():
     thread.start()
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
     thread.join()
-    # consume_messages()
     
 if __name__ == "__main__":
     main()
